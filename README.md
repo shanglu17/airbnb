@@ -4,7 +4,6 @@
 
 ## 截图对比（原版 Airbnb vs 本项目）
 
-> 将图片放到 `docs/screenshots/` 后替换下方路径即可。
 
 | 页面 | 原版 Airbnb | 本项目实现 |
 | --- | --- | --- |
@@ -14,7 +13,6 @@
 
 ## App 演示视频
 
-> 将演示视频放到 `docs/demo/app-demo.mp4`，预览图放到 `docs/screenshots/app-demo-preview.gif`。
 
 [![App Demo](docs/screenshots/app-demo-preview.gif)](docs/demo/app-demo.mp4)
 
