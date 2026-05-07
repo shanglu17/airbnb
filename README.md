@@ -1,42 +1,68 @@
-# Airbnb (Jetpack Compose)
+# Airbnb (Jetpack Compose 复现)
 
-Kotlin + Jetpack Compose 复现版 Airbnb 核心流程，当前覆盖：
+本项目使用 Kotlin + Jetpack Compose 复现 Airbnb 的核心浏览链路，当前覆盖：首页搜索/筛选、懒加载分页、详情页展示、返回状态保留。
 
-- 首页：搜索/城市筛选、下拉刷新、懒加载分页、空态、错误重试
-- 首页卡片：图片、标签、评分、房型信息、价格区块
-- 详情页：独立 ViewModel 状态、顶部大图轮播、房源信息、设施、评价、底部固定 CTA
-- 导航与状态：进入详情再返回时保留首页滚动位置、筛选条件和已加载内容
+## 截图对比（原版 Airbnb vs 本项目）
 
-## 当前实现结构
+> 将图片放到 `docs/screenshots/` 后替换下方路径即可。
 
-```text
-app/src/main/java/com/example/airbnb
-├─ data/                # Listing/Review 模型 + Mock 数据
-├─ navigation/          # NavHost 路由
-├─ ui/components/       # 首页复用卡片组件
-├─ ui/home/             # 首页 UI + 状态容器
-├─ ui/detail/           # 详情 UI + 独立 ViewModel
-└─ ui/theme/            # 主题与配色
-```
+| 页面 | 原版 Airbnb                                                             | 本项目实现 |
+| --- |-----------------------------------------------------------------------| --- |
+| 首页（搜索/筛选） | ![Airbnb Home Original](docs/screenshots/original-home.jpg)           | ![Airbnb Home Implemented](docs/screenshots/implemented-home.png) |
+| 首页（推荐分区） | ![Airbnb Home Feed Original](docs/screenshots/original-home-feed.jpg) | ![Airbnb Home Feed Implemented](docs/screenshots/implemented-home-feed.png) |
+| 详情页（头图与信息） | ![Airbnb Detail Original](docs/screenshots/original-detail.jpg)       | ![Airbnb Detail Implemented](docs/screenshots/implemented-detail.png) |
 
-## 复现过程中遇到的问题与优化
+## 运行说明
 
-1. **分页触底抖动**
-   - 问题：列表在底部附近可能重复触发分页。
-   - 优化：`derivedStateOf + isLoadingMore + hasMore` 三重门控，避免重复请求。
-2. **返回首页闪烁和重载**
-   - 问题：详情返回首页时，列表位置和筛选容易丢失。
-   - 优化：`SavedStateHandle` 保存筛选、已加载条数、滚动 index/offset，返回时恢复。
-3. **图片加载观感**
-   - 问题：网络图片延迟导致体验不稳定。
-   - 优化：列表与详情统一 `ContentScale.Crop` 和稳定尺寸，减少跳动。
-4. **异常态缺失**
-   - 问题：只做 happy path 时，刷新失败/分页失败体验差。
-   - 优化：首页补齐初始失败、分页失败、空态和重试入口。
+### 1. 环境要求
 
-## 运行
+- Android Studio（建议最新版稳定版）
+- JDK 17+
+- Android SDK 34
+
+### 2. 克隆并构建
 
 ```powershell
 Set-Location E:\github\Airbnb
 .\gradlew.bat :app:assembleDebug
 ```
+
+### 3. Android Studio 运行
+
+1. 打开项目根目录 `Airbnb`
+2. 等待 Gradle 同步完成
+3. 选择 `app` 配置并启动模拟器/真机运行
+
+## 遇到的主要问题 + 解决方案
+
+1. **Gradle / JDK 导致构建失败**
+   - 问题：JDK 版本不匹配或本地 Gradle 分发包下载不完整，导致 daemon 或构建失败。
+   - 解决：统一使用 JDK 17+，通过 wrapper 构建并重试依赖下载，确保 `assembleDebug` 可成功。
+
+2. **Theme.Material3.DayNight.NoActionBar 找不到**
+   - 问题：Manifest/XML 主题使用了 Material 主题父类，但依赖不完整时会在 AAPT 链接阶段报错。
+   - 解决：补齐 Material 依赖并保持主题链路一致，确保资源可解析。
+
+3. **分页触发抖动**
+   - 问题：滚动到列表底部附近时，分页可能重复触发。
+   - 解决：使用 `derivedStateOf + isLoadingMore + hasMore + isRefreshing` 门控，减少重复请求。
+
+4. **从详情返回首页状态丢失**
+   - 问题：返回后滚动位置和筛选条件容易重置。
+   - 解决：通过 `SavedStateHandle` 保存 `scroll index/offset`、筛选和已加载条数，返回时恢复。
+
+## 简化点与额外优化
+
+### 做了哪些简化
+
+- 数据源使用本地 Mock 数据（未接入真实后端 API）
+- 登录、下单、支付、地图、日历完整预订链路未实现
+- 样式做“高相似度复现”，未追求像素级 1:1
+
+### 做了哪些额外优化
+
+- 首页拆分为搜索模式 / 个性化分区模式 / 默认城市分组模式，便于面试展示架构思路
+- 新增“继续搜索”“最近浏览”“推荐分区”等状态驱动模块
+- 详情页采用独立 ViewModel，首页与详情状态解耦
+- 异常模拟开关可控（默认关闭），便于稳定演示
+- 清理 `app/build` 的 Git 跟踪噪音，仓库变更更干净
