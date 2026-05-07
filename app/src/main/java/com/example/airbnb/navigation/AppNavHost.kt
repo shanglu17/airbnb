@@ -35,6 +35,7 @@ fun AirbnbApp() {
                 state = vm.uiState,
                 availableCities = vm.cities,
                 onListingClick = { listing ->
+                    vm.onListingOpened(listing)
                     navController.navigate("${Route.DETAIL_PREFIX}/${listing.id}")
                 },
                 onLoadMore = vm::loadMore,

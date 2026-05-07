@@ -10,10 +10,11 @@ import com.example.airbnb.data.Listing
 import com.example.airbnb.data.MockData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
 data class HomeUiState(
     val items: List<Listing> = emptyList(),
+    val continueSearchItems: List<Listing> = emptyList(),
+    val recentViewedItems: List<Listing> = emptyList(),
     val selectedCity: String = "All",
     val searchKeyword: String = "",
     val isRefreshing: Boolean = false,
@@ -33,21 +34,39 @@ class HomeViewModel(
     private val cityKey = "home_city_filter"
     private val queryKey = "home_search_query"
     private val loadedCountKey = "home_loaded_count"
+    private val recentViewedIdsKey = "home_recent_viewed_ids"
+    private val recentSearchKeywordsKey = "home_recent_search_keywords"
     private val scrollIndexKey = "home_scroll_index"
     private val scrollOffsetKey = "home_scroll_offset"
+    private val enableMockError = false
 
     var uiState by mutableStateOf(HomeUiState())
         private set
 
     init {
+        restorePersonalizedSections()
         refresh(initial = true)
     }
 
     val cities: List<String> = MockData.supportedCities
 
     fun onSearchKeywordChange(keyword: String) {
+        val normalized = keyword.trim()
         uiState = uiState.copy(searchKeyword = keyword)
         savedStateHandle[queryKey] = keyword
+        if (normalized.length >= 2) {
+            val updatedHistory = (listOf(normalized) + recentSearchKeywords())
+                .distinctBy { it.lowercase() }
+                .take(6)
+            savedStateHandle[recentSearchKeywordsKey] = updatedHistory
+            uiState = uiState.copy(
+                continueSearchItems = continueSearchFromKeywords(updatedHistory)
+            )
+        } else if (normalized.isBlank()) {
+            uiState = uiState.copy(
+                continueSearchItems = continueSearchFromKeywords(recentSearchKeywords())
+            )
+        }
         refresh()
     }
 
@@ -63,6 +82,18 @@ class HomeViewModel(
         savedStateHandle[cityKey] = "All"
         savedStateHandle[queryKey] = ""
         refresh()
+    }
+
+    fun onListingOpened(listing: Listing) {
+        val updatedRecentViewed = (listOf(listing.id) + uiState.recentViewedItems.map { it.id })
+            .distinct()
+            .take(8)
+
+        savedStateHandle[recentViewedIdsKey] = updatedRecentViewed
+
+        uiState = uiState.copy(
+            recentViewedItems = idsToListings(updatedRecentViewed)
+        )
     }
 
     fun loadMore() {
@@ -117,8 +148,10 @@ class HomeViewModel(
             val targetCount = if (initial) restoredCount else pageSize
             val initialItems = filtered.take(targetCount)
             savedStateHandle[loadedCountKey] = initialItems.size
+            val keywordHistory = recentSearchKeywords()
             uiState = uiState.copy(
                 items = initialItems,
+                continueSearchItems = continueSearchFromKeywords(keywordHistory),
                 isRefreshing = false,
                 isInitialLoading = false,
                 hasMore = initialItems.size < filtered.size
@@ -143,15 +176,64 @@ class HomeViewModel(
 
     private fun currentFilteredSource(): List<Listing> {
         val city = uiState.selectedCity
-        val query = uiState.searchKeyword.trim()
+        val query = normalizeKeyword(uiState.searchKeyword)
         return source.filter { listing ->
             val cityMatch = city == "All" || listing.location == city
-            val queryMatch = query.isBlank() || listing.title.contains(query, ignoreCase = true)
+            val queryMatch = query.isBlank() || matchesKeyword(listing, query)
             cityMatch && queryMatch
         }
     }
 
-    private fun shouldMockError(): Boolean = Random.nextInt(100) < 10
+    private fun shouldMockError(): Boolean = enableMockError
+
+    private fun restorePersonalizedSections() {
+        val recentIds = savedStateHandle.get<List<Int>>(recentViewedIdsKey).orEmpty()
+        val recentKeywords = recentSearchKeywords()
+        uiState = uiState.copy(
+            recentViewedItems = idsToListings(recentIds),
+            continueSearchItems = continueSearchFromKeywords(recentKeywords)
+        )
+    }
+
+    private fun idsToListings(ids: List<Int>): List<Listing> {
+        val byId = source.associateBy { it.id }
+        return ids.mapNotNull { byId[it] }
+    }
+
+    private fun recentSearchKeywords(): List<String> =
+        savedStateHandle.get<List<String>>(recentSearchKeywordsKey).orEmpty()
+
+    private fun continueSearchFromKeywords(keywords: List<String>): List<Listing> {
+        if (keywords.isEmpty()) return emptyList()
+        val normalizedKeywords = keywords.map(::normalizeKeyword)
+            .filter { it.isNotBlank() }
+        if (normalizedKeywords.isEmpty()) return emptyList()
+        return source.filter { listing ->
+            normalizedKeywords.any { keyword ->
+                matchesKeyword(listing, keyword)
+            }
+        }.take(8)
+    }
+
+    private fun matchesKeyword(listing: Listing, keyword: String): Boolean {
+        val aliasKeyword = cityAliases[keyword] ?: keyword
+        return listing.title.contains(aliasKeyword, ignoreCase = true) ||
+            listing.location.contains(aliasKeyword, ignoreCase = true) ||
+            listing.tags.any { it.contains(aliasKeyword, ignoreCase = true) }
+    }
+
+    private fun normalizeKeyword(value: String): String = value.trim().lowercase()
+
+    private val cityAliases = mapOf(
+        "shanghai" to "shanghai",
+        "上海" to "shanghai",
+        "beijing" to "beijing",
+        "北京" to "beijing",
+        "shenzhen" to "shenzhen",
+        "深圳" to "shenzhen",
+        "hangzhou" to "hangzhou",
+        "杭州" to "hangzhou"
+    )
 
     fun restoreScrollPosition() {
         val restoredIndex = savedStateHandle.get<Int>(scrollIndexKey) ?: 0

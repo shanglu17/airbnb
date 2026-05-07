@@ -19,6 +19,9 @@ data class Listing(
     val hostSince: String,
     val cleaningFee: Int,
     val serviceFee: Int,
+    val supportsFreeCancellation: Boolean,
+    val isNearbyArea: Boolean,
+    val isFlexibleDateAvailable: Boolean,
     val reviews: List<Review>
 )
 

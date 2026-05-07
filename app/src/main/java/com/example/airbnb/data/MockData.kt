@@ -34,6 +34,9 @@ object MockData {
             hostSince = "Host since ${2018 + (index % 6)}",
             cleaningFee = 80 + (index % 4) * 20,
             serviceFee = 60 + (index % 3) * 15,
+            supportsFreeCancellation = index % 3 != 1,
+            isNearbyArea = index % 5 != 1,
+            isFlexibleDateAvailable = index % 4 != 0,
             reviews = List(4) { reviewIndex ->
                 Review(
                     id = id * 10 + reviewIndex,
