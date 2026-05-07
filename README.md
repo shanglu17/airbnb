@@ -6,11 +6,17 @@
 
 > 将图片放到 `docs/screenshots/` 后替换下方路径即可。
 
-| 页面 | 原版 Airbnb                                                             | 本项目实现 |
-| --- |-----------------------------------------------------------------------| --- |
-| 首页（搜索/筛选） | ![Airbnb Home Original](docs/screenshots/original-home.jpg)           | ![Airbnb Home Implemented](docs/screenshots/implemented-home.png) |
-| 首页（推荐分区） | ![Airbnb Home Feed Original](docs/screenshots/original-home-feed.jpg) | ![Airbnb Home Feed Implemented](docs/screenshots/implemented-home-feed.png) |
-| 详情页（头图与信息） | ![Airbnb Detail Original](docs/screenshots/original-detail.jpg)       | ![Airbnb Detail Implemented](docs/screenshots/implemented-detail.png) |
+| 页面 | 原版 Airbnb | 本项目实现 |
+| --- | --- | --- |
+| 首页（搜索/筛选） | <img src="docs/screenshots/original-home-compare.png" alt="Airbnb Home Original" width="220" /> | <img src="docs/screenshots/implemented-home-compare.png" alt="Airbnb Home Implemented" width="220" /> |
+| 首页（继续搜索，最近浏览） | <img src="docs/screenshots/original-home-feed-compare.png" alt="Airbnb Home Feed Original" width="220" /> | <img src="docs/screenshots/implemented-home-feed-compare.png" alt="Airbnb Home Feed Implemented" width="220" /> |
+| 详情页（头图与信息） | <img src="docs/screenshots/original-detail-compare.png" alt="Airbnb Detail Original" width="220" /> | <img src="docs/screenshots/implemented-detail-compare.png" alt="Airbnb Detail Implemented" width="220" /> |
+
+## App 演示视频
+
+> 将演示视频放到 `docs/demo/app-demo.mp4`，预览图放到 `docs/screenshots/app-demo-preview.gif`。
+
+[![App Demo](docs/screenshots/app-demo-preview.gif)](docs/demo/app-demo.mp4)
 
 ## 运行说明
 
