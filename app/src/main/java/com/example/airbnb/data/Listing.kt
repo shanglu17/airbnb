@@ -7,6 +7,25 @@ data class Listing(
     val pricePerNight: Int,
     val rating: Double,
     val reviewCount: Int,
-    val imageUrl: String,
-    val description: String
+    val imageUrls: List<String>,
+    val description: String,
+    val tags: List<String>,
+    val isSuperHost: Boolean,
+    val guestCount: Int,
+    val bedroomCount: Int,
+    val bathroomCount: Int,
+    val amenities: List<String>,
+    val hostName: String,
+    val hostSince: String,
+    val cleaningFee: Int,
+    val serviceFee: Int,
+    val reviews: List<Review>
+)
+
+data class Review(
+    val id: Int,
+    val author: String,
+    val rating: Double,
+    val date: String,
+    val comment: String
 )

@@ -1,13 +1,14 @@
 package com.example.airbnb.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.airbnb.ui.detail.DetailScreen
+import com.example.airbnb.ui.detail.DetailRoute
 import com.example.airbnb.ui.home.HomeScreen
 import com.example.airbnb.ui.home.HomeViewModel
 
@@ -21,6 +22,9 @@ private object Route {
 fun AirbnbApp() {
     val navController = rememberNavController()
     val vm: HomeViewModel = viewModel()
+    LaunchedEffect(Unit) {
+        vm.restoreScrollPosition()
+    }
 
     NavHost(
         navController = navController,
@@ -29,19 +33,24 @@ fun AirbnbApp() {
         composable(Route.HOME) {
             HomeScreen(
                 state = vm.uiState,
+                availableCities = vm.cities,
                 onListingClick = { listing ->
                     navController.navigate("${Route.DETAIL_PREFIX}/${listing.id}")
                 },
-                onLoadMore = vm::loadMore
+                onLoadMore = vm::loadMore,
+                onRefresh = vm::refresh,
+                onRetry = vm::retry,
+                onSearchKeywordChange = vm::onSearchKeywordChange,
+                onCitySelected = vm::onCitySelected,
+                onClearFilters = vm::clearFilters,
+                onListPositionChange = vm::onListPositionChange
             )
         }
         composable(
             route = Route.DETAIL,
             arguments = listOf(navArgument("listingId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val listingId = backStackEntry.arguments?.getInt("listingId") ?: -1
-            DetailScreen(
-                listing = vm.findListing(listingId),
+        ) {
+            DetailRoute(
                 onBack = { navController.popBackStack() }
             )
         }

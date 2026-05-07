@@ -3,6 +3,7 @@ package com.example.airbnb.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -18,8 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +43,7 @@ fun ListingCard(
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             AsyncImage(
-                model = item.imageUrl,
+                model = item.imageUrls.firstOrNull(),
                 contentDescription = item.title,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -50,6 +51,26 @@ fun ListingCard(
                     .clip(RoundedCornerShape(14.dp)),
                 contentScale = ContentScale.Crop
             )
+            if (item.tags.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item.tags.take(2).forEach { tag ->
+                        Text(
+                            text = tag,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -73,6 +94,12 @@ fun ListingCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 4.dp)
+            )
+            Text(
+                text = "${item.guestCount} guests · ${item.bedroomCount} bedrooms · ${item.bathroomCount} baths",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp)
             )
             Text(
                 text = "¥${item.pricePerNight} / night",
